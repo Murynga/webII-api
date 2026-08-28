@@ -1,0 +1,21 @@
+info:
+  name: Listar usuários
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{baseUrl}}/users"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Retorna a lista de usuários", function() {
+          expect(res.status).to.equal(200);
+          expect(res.body.success).to.equal(true);
+          expect(res.body.data).to.be.an("array");
+        });
+
+settings:
+  encodeUrl: true

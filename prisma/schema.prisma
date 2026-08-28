@@ -1,0 +1,63 @@
+// prisma/schema.prisma
+
+generator client {
+  provider               = "prisma-client"
+  output                 = "../generated/prisma"
+  moduleFormat           = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension    = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Papel {
+  PROFESSOR
+  ADMIN
+}
+
+model Subject {
+  id           Int        @id @default(autoincrement())
+  nome         String
+  ativa        Boolean    @default(true)
+  professor_id Int
+  createdAt    DateTime   @default(now()) @map("data_criacao")
+  updatedAt    DateTime   @updatedAt @map("data_atualizacao")
+  professor    User       @relation(fields: [professor_id], references: [id])
+  questions    Question[]
+}
+
+enum Dificuldade {
+  FACIL   @map("1")
+  MEDIA   @map("2")
+  DIFICIL @map("3")
+}
+
+model Question {
+  id               Int         @id @default(autoincrement())
+  enunciado        String
+  dificuldade      Dificuldade
+  resposta_correta String?
+  subject_id       Int
+  author_id        Int
+  ativa            Boolean     @default(true)
+  createdAt        DateTime    @default(now()) @map("data_criacao")
+  updatedAt        DateTime    @updatedAt @map("data_atualizacao")
+  subject          Subject     @relation(fields: [subject_id], references: [id])
+  author           User        @relation(fields: [author_id], references: [id])
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  nome      String
+  email     String     @unique
+  foto      String?
+  papel     Papel      @default(PROFESSOR)
+  createdAt DateTime   @default(now()) @map("data_criacao")
+  updatedAt DateTime   @updatedAt @map("data_atualizacao")
+  subjects  Subject[]
+  questions Question[]
+
+  @@map("users")
+}

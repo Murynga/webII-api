@@ -1,0 +1,37 @@
+info:
+  name: Listar matérias
+  type: http
+  seq: 3
+  tags:
+    - atividade-03
+
+http:
+  method: GET
+  url: "{{baseUrl}}/subjects"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Retorna todas as matérias", function() {
+          expect(res.status).to.equal(200);
+          expect(res.body.success).to.equal(true);
+          expect(res.body.data).to.be.an("array");
+          expect(res.body.total).to.equal(res.body.data.length);
+        });
+
+        test("Inclui o professor quando há matérias cadastradas", function() {
+          if (res.body.data.length === 0) {
+            return;
+          }
+
+          const subject = res.body.data[0];
+          expect(subject).to.have.property("id");
+          expect(subject).to.have.property("nome");
+          expect(subject).to.have.property("professor");
+          expect(subject.professor).to.have.property("id");
+          expect(subject.professor).to.have.property("nome");
+        });
+
+settings:
+  encodeUrl: true
