@@ -53,11 +53,90 @@ app.get('/users', async (req, res) => {
       total: usuarios.length,
     });
   } catch (error) {
-    console.error('Erro ao buscar usuários:', error);
+    console.error('Erro ao buscar usuário(s):', error);
 
     res.status(500).json({
       success: false,
-      message: 'Erro ao buscar usuários',
+      message: 'Erro ao buscar usuário(s)',
+    });
+  }
+});
+
+app.get('/subjects', async (req, res) => {
+  try {
+    const disciplinas = await prisma.subject.findMany({
+      select: {
+        id: true,
+        nome: true,
+        ativa: true,
+        professor: {
+          select: {
+            id: true,
+            nome: true,
+            email: true,
+            foto: true,
+          },
+        },
+        createdAt: true,
+      },
+      orderBy: { id: 'asc' },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: disciplinas,
+      total: disciplinas.length,
+    });
+  } catch (error) {
+    console.error('Erro ao buscar disciplina(s):', error);
+
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao buscar disciplina(s)',
+    });
+  }
+});
+
+app.get('/questions', async (req, res) => {
+  try {
+    const questoes = await prisma.question.findMany({
+      select: {
+        id: true,
+        enunciado: true,
+        dificuldade: true,
+        resposta_correta: true,
+        ativa: true,
+        subject: {
+          select: {
+            id: true,
+            nome: true,
+            ativa: true,
+          },
+        },
+        author: {
+          select: {
+            id: true,
+            nome: true,
+            email: true,
+            foto: true,
+          },
+        },
+        createdAt: true,
+      },
+      orderBy: { id: 'asc' },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: questoes,
+      total: questoes.length,
+    });
+  } catch (error) {
+    console.error('Erro ao buscar questão(ões):', error);
+
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao buscar questão(ões)',
     });
   }
 });

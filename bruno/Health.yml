@@ -1,0 +1,19 @@
+info:
+  name: Health check
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{baseUrl}}/health"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Retorna 200 quando a API e o banco estão disponíveis", function() {
+          expect(res.status).to.equal(200);
+        });
+
+settings:
+  encodeUrl: true
