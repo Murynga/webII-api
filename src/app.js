@@ -1,151 +1,55 @@
-//src/app.js
-import express from 'express';
-import prisma from './config/database.js';
+// src/app.js
+import express from "express";
+import prisma from "./config/database.js";
+import userRoutes from "./routes/userRoutes.js";
 
 const app = express();
 
+// Middleware para parsing JSON
 app.use(express.json());
 
-app.get('/health', async (req, res) => {
+// Rota de health check
+app.get("/health", async (req, res) => {
+  let databaseStatus = "OK";
+  let databaseMessage = "Conexão com banco de dados funcionando";
+
   try {
+    // Tenta fazer uma query simples no banco
     await prisma.$queryRaw`SELECT 1`;
-
-    res.status(200).json({
-      status: 'OK',
-      message: 'API do Gerador de Provas',
-      timestamp: new Date().toISOString(),
-      services: {
-        api: 'OK',
-        database: { status: 'OK' },
-      },
-    });
   } catch (error) {
-    console.error('Erro na verificação do banco:', error);
-
-    res.status(503).json({
-      status: 'DEGRADED',
-      message: 'API do Gerador de Provas',
-      services: {
-        api: 'OK',
-        database: { status: 'ERROR' },
-      },
-    });
+    databaseStatus = "ERROR";
+    databaseMessage = "Falha na conexão com banco de dados";
+    console.error("Erro na verificação do banco:", error);
   }
-});
 
-app.get('/users', async (req, res) => {
-  try {
-    const usuarios = await prisma.user.findMany({
-      select: {
-        id: true,
-        nome: true,
-        email: true,
-        papel: true,
-        foto: true,
-        createdAt: true,
+  // Define o status HTTP baseado na saúde do banco
+  const httpStatus = databaseStatus === "OK" ? 200 : 503;
+
+  res.status(httpStatus).json({
+    status: databaseStatus === "OK" ? "OK" : "DEGRADED",
+    message: "API do Gerador de Provas",
+    timestamp: new Date().toISOString(),
+    version: "1.0.0",
+    services: {
+      api: "OK",
+      database: {
+        status: databaseStatus,
+        message: databaseMessage,
       },
-      orderBy: { id: 'asc' },
-    });
-
-    res.status(200).json({
-      success: true,
-      data: usuarios,
-      total: usuarios.length,
-    });
-  } catch (error) {
-    console.error('Erro ao buscar usuário(s):', error);
-
-    res.status(500).json({
-      success: false,
-      message: 'Erro ao buscar usuário(s)',
-    });
-  }
-});
-
-app.get('/subjects', async (req, res) => {
-  try {
-    const disciplinas = await prisma.subject.findMany({
-      select: {
-        id: true,
-        nome: true,
-        ativa: true,
-        professor: {
-          select: {
-            id: true,
-            nome: true,
-            email: true,
-            foto: true,
-          },
-        },
-        createdAt: true,
-      },
-      orderBy: { id: 'asc' },
-    });
-
-    res.status(200).json({
-      success: true,
-      data: disciplinas,
-      total: disciplinas.length,
-    });
-  } catch (error) {
-    console.error('Erro ao buscar disciplina(s):', error);
-
-    res.status(500).json({
-      success: false,
-      message: 'Erro ao buscar disciplina(s)',
-    });
-  }
-});
-
-app.get('/questions', async (req, res) => {
-  try {
-    const questoes = await prisma.question.findMany({
-      select: {
-        id: true,
-        enunciado: true,
-        dificuldade: true,
-        resposta_correta: true,
-        ativa: true,
-        subject: {
-          select: {
-            id: true,
-            nome: true,
-            ativa: true,
-          },
-        },
-        author: {
-          select: {
-            id: true,
-            nome: true,
-            email: true,
-            foto: true,
-          },
-        },
-        createdAt: true,
-      },
-      orderBy: { id: 'asc' },
-    });
-
-    res.status(200).json({
-      success: true,
-      data: questoes,
-      total: questoes.length,
-    });
-  } catch (error) {
-    console.error('Erro ao buscar questão(ões):', error);
-
-    res.status(500).json({
-      success: false,
-      message: 'Erro ao buscar questão(ões)',
-    });
-  }
-});
-
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Rota ' + req.method + ' ' + req.originalUrl + ' não encontrada',
+    },
   });
 });
 
+// Rotas da API
+app.use("/users", userRoutes); // <--
+
+// Middleware de tratamento de rotas não encontradas
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Rota${req.method}${req.originalUrl} não encontrada`,
+  });
+});
+
+// Export default para ES Modules
 export default app;
