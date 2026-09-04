@@ -1,5 +1,5 @@
 // src/controllers/userController.js
-import prisma from "../config/database.js";
+import prisma from '../config/database.js';
 
 /**
  * Controller de Usuários (Professores e Admins)
@@ -14,7 +14,7 @@ export const create = async (req, res) => {
     if (!nome || !email) {
       return res.status(400).json({
         success: false,
-        message: "Nome e email são obrigatórios",
+        message: 'Nome e email são obrigatórios',
       });
     }
 
@@ -26,7 +26,7 @@ export const create = async (req, res) => {
     if (emailExistente) {
       return res.status(409).json({
         success: false,
-        message: "Email já cadastrado no sistema",
+        message: 'Email já cadastrado no sistema',
       });
     }
 
@@ -35,7 +35,7 @@ export const create = async (req, res) => {
       data: {
         nome,
         email,
-        papel: papel || "PROFESSOR", // Default: PROFESSOR
+        papel: papel || 'PROFESSOR', // Default: PROFESSOR
         foto: foto || null,
       },
       select: {
@@ -50,22 +50,22 @@ export const create = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Usuário criado com sucesso",
+      message: 'Usuário criado com sucesso',
       data: novoUsuario,
     });
   } catch (error) {
-    console.error("Erro ao criar usuário:", error);
+    console.error('Erro ao criar usuário:', error);
 
-    if (error.code === "P2002") {
+    if (error.code === 'P2002') {
       return res.status(409).json({
         success: false,
-        message: "Email já cadastrado no sistema",
+        message: 'Email já cadastrado no sistema',
       });
     }
 
     res.status(500).json({
       success: false,
-      message: "Erro ao criar usuário",
+      message: 'Erro ao criar usuário',
     });
   }
 };
@@ -83,7 +83,7 @@ export const getAll = async (req, res) => {
         createdAt: true,
       },
       orderBy: {
-        createdAt: "desc", // Mais recentes primeiro
+        createdAt: 'desc', // Mais recentes primeiro
       },
     });
 
@@ -93,10 +93,10 @@ export const getAll = async (req, res) => {
       total: usuarios.length,
     });
   } catch (error) {
-    console.error("Erro ao listar usuários:", error);
+    console.error('Erro ao listar usuários:', error);
     res.status(500).json({
       success: false,
-      message: "Erro ao listar usuários",
+      message: 'Erro ao listar usuários',
     });
   }
 };
@@ -113,7 +113,7 @@ export const getById = async (req, res) => {
     if (!Number.isInteger(userId) || userId <= 0) {
       return res.status(400).json({
         success: false,
-        message: "ID inválido. Deve ser um número",
+        message: 'ID inválido. Deve ser um número',
       });
     }
 
@@ -142,10 +142,10 @@ export const getById = async (req, res) => {
       data: usuario,
     });
   } catch (error) {
-    console.error("Erro ao buscar usuário:", error);
+    console.error('Erro ao buscar usuário:', error);
     res.status(500).json({
       success: false,
-      message: "Erro ao buscar usuário",
+      message: 'Erro ao buscar usuário',
     });
   }
 };

@@ -1,0 +1,29 @@
+info:
+  name: Criar usuário duplicado
+  type: http
+  seq: 15
+  tags:
+    - aula-04
+
+http:
+  method: POST
+  url: '{{baseUrl}}/users'
+  body:
+    type: json
+    data: |-
+      {
+        "nome": "Usuário duplicado",
+        "email": "{{userEmail}}"
+      }
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Rejeita email já cadastrado", function() {
+          expect(res.status).to.equal(409);
+          expect(res.body.success).to.equal(false);
+        });
+
+settings:
+  encodeUrl: true

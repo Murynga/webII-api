@@ -1,0 +1,31 @@
+info:
+  name: Criar questão com autor inexistente
+  type: http
+  seq: 22
+  tags:
+    - atividade-04
+
+http:
+  method: POST
+  url: '{{baseUrl}}/questions'
+  body:
+    type: json
+    data: |-
+      {
+        "enunciado": "Questão inválida",
+        "dificuldade": 1,
+        "subjectId": {{subjectId}},
+        "authorId": 999999
+      }
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Informa autor não encontrado ao criar questão", function() {
+          expect(res.status).to.equal(404);
+          expect(res.body.success).to.equal(false);
+        });
+
+settings:
+  encodeUrl: true

@@ -1,20 +1,22 @@
 info:
-  name: Listar usuários
+  name: Buscar usuário por ID
   type: http
-  seq: 2
+  seq: 4
+  tags:
+    - aula-04
 
 http:
   method: GET
-  url: "{{baseUrl}}/users"
+  url: '{{baseUrl}}/users/{{userId}}'
 
 runtime:
   scripts:
     - type: tests
       code: |-
-        test("Retorna a lista de usuários", function() {
+        test("Retorna o usuário solicitado", function() {
           expect(res.status).to.equal(200);
           expect(res.body.success).to.equal(true);
-          expect(res.body.data).to.be.an("array");
+          expect(res.body.data).to.have.property("id");
         });
 
 settings:

@@ -1,0 +1,22 @@
+info:
+  name: Buscar matéria inexistente
+  type: http
+  seq: 20
+  tags:
+    - atividade-04
+
+http:
+  method: GET
+  url: '{{baseUrl}}/subjects/999999'
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Informa matéria não encontrada", function() {
+          expect(res.status).to.equal(404);
+          expect(res.body.success).to.equal(false);
+        });
+
+settings:
+  encodeUrl: true

@@ -1,6 +1,6 @@
 // src/routes/subjectRoutes.js
-import express from "express";
-import * as subjectController from "../controllers/subjectController.js";
+import express from 'express';
+import * as subjectController from '../controllers/subjectController.js';
 
 const router = express.Router();
 
@@ -10,12 +10,12 @@ const router = express.Router();
  */
 
 // CREATE - Criar nova matéria
-router.post("/", subjectController.create);
+router.post('/', subjectController.create);
 
 // READ - Listar todos os usuários
-router.get("/", subjectController.getAll);
+router.get('/', subjectController.getAll);
 
 // READ - Buscar usuário por ID
-router.get("/:id", subjectController.getById);
+router.get('/:id', subjectController.getById);
 
 export default router;

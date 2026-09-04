@@ -1,0 +1,31 @@
+info:
+  name: Criar questão com matéria inexistente
+  type: http
+  seq: 21
+  tags:
+    - atividade-04
+
+http:
+  method: POST
+  url: '{{baseUrl}}/questions'
+  body:
+    type: json
+    data: |-
+      {
+        "enunciado": "Questão inválida",
+        "dificuldade": 1,
+        "subjectId": 999999,
+        "authorId": {{userId}}
+      }
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Informa matéria não encontrada ao criar questão", function() {
+          expect(res.status).to.equal(404);
+          expect(res.body.success).to.equal(false);
+        });
+
+settings:
+  encodeUrl: true

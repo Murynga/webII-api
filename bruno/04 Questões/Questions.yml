@@ -1,13 +1,14 @@
 info:
   name: Listar questões
   type: http
-  seq: 4
+  seq: 10
   tags:
-    - atividade-03
+    - aula-03
+    - aula-04
 
 http:
   method: GET
-  url: "{{baseUrl}}/questions"
+  url: '{{baseUrl}}/questions'
 
 runtime:
   scripts:

@@ -1,0 +1,26 @@
+info:
+  name: Criar questão inválida
+  type: http
+  seq: 13
+  tags:
+    - atividade-04
+
+http:
+  method: POST
+  url: '{{baseUrl}}/questions'
+  body:
+    type: json
+    data: |-
+      {}
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Rejeita questão sem campos obrigatórios", function() {
+          expect(res.status).to.equal(400);
+          expect(res.body.success).to.equal(false);
+        });
+
+settings:
+  encodeUrl: true

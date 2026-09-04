@@ -1,12 +1,12 @@
 // src/controllers/subjectController.js
-import prisma from "../config/database.js";
+import prisma from '../config/database.js';
 
 /**
- * Controller de Matérias 
+ * Controller de Matérias
  * Responsável por gerenciar as operações CRUD de matérias
  */
 
-// CREATE - Criar novo usuário
+// CREATE - Criar nova matéria
 export const create = async (req, res) => {
   try {
     const { nome, ativa, professorId } = req.body;
@@ -14,11 +14,11 @@ export const create = async (req, res) => {
     if (!nome || !professorId) {
       return res.status(400).json({
         success: false,
-        message: "Nome e Identificador do professor são obrigatórios",
+        message: 'Nome e Identificador do professor são obrigatórios',
       });
     }
 
-    // Cria o usuário no banco
+    // Cria a matéria no banco
     const novaMateria = await prisma.subject.create({
       data: {
         nome,
@@ -29,30 +29,36 @@ export const create = async (req, res) => {
         id: true,
         nome: true,
         ativa: true,
-        professorId: true,
+        professor: {
+          select: {
+            id: true,
+            nome: true,
+            email: true,
+            foto: true,
+          },
+        },
         createdAt: true,
       },
     });
 
     res.status(201).json({
       success: true,
-      message: "Matéria criada com sucesso",
+      message: 'Matéria criada com sucesso',
       data: novaMateria,
     });
   } catch (error) {
-    console.error("Erro ao criar matéria:", error);
+    console.error('Erro ao criar matéria:', error);
 
-    // TODO - TESTAR ISSO AQUI!!!
-    if (error.code === "200") { //!!! TÁ ERRADO!!!
-      return res.status(200).json({
+    if (error.code === 'P2003') {
+      return res.status(404).json({
         success: false,
-        message: "ID do professor inexistente!",
+        message: 'ID do professor inexistente',
       });
     }
 
     res.status(500).json({
       success: false,
-      message: "Erro ao criar matéria",
+      message: 'Erro ao criar matéria',
     });
   }
 };
@@ -67,16 +73,16 @@ export const getAll = async (req, res) => {
         ativa: true,
         professor: {
           select: {
-          id: true,
+            id: true,
             nome: true,
             email: true,
             foto: true,
-            }
+          },
         },
         createdAt: true,
       },
       orderBy: {
-        createdAt: "desc", // Mais recentes primeiro
+        createdAt: 'desc', // Mais recentes primeiro
       },
     });
 
@@ -86,10 +92,10 @@ export const getAll = async (req, res) => {
       total: materias.length,
     });
   } catch (error) {
-    console.error("Erro ao listar matérias:", error);
+    console.error('Erro ao listar matérias:', error);
     res.status(500).json({
       success: false,
-      message: "Erro ao listar matérias",
+      message: 'Erro ao listar matérias',
     });
   }
 };
@@ -106,7 +112,7 @@ export const getById = async (req, res) => {
     if (!Number.isInteger(subjectId) || subjectId <= 0) {
       return res.status(400).json({
         success: false,
-        message: "ID inválido. Deve ser um número",
+        message: 'ID inválido. Deve ser um número',
       });
     }
 
@@ -118,11 +124,11 @@ export const getById = async (req, res) => {
         ativa: true,
         professor: {
           select: {
-          id: true,
+            id: true,
             nome: true,
             email: true,
             foto: true,
-            }
+          },
         },
         createdAt: true,
       },
@@ -141,10 +147,10 @@ export const getById = async (req, res) => {
       data: materia,
     });
   } catch (error) {
-    console.error("Erro ao buscar matéria:", error);
+    console.error('Erro ao buscar matéria:', error);
     res.status(500).json({
       success: false,
-      message: "Erro ao buscar matéria",
+      message: 'Erro ao buscar matéria',
     });
   }
 };
