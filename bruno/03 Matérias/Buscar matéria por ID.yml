@@ -1,0 +1,23 @@
+info:
+  name: Buscar matéria por ID
+  type: http
+  seq: 8
+  tags:
+    - atividade-04
+
+http:
+  method: GET
+  url: '{{baseUrl}}/subjects/{{subjectId}}'
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Retorna a matéria solicitada", function() {
+          expect(res.status).to.equal(200);
+          expect(res.body.success).to.equal(true);
+          expect(res.body.data).to.have.property("professor");
+        });
+
+settings:
+  encodeUrl: true

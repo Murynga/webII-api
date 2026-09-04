@@ -18,14 +18,14 @@ enum Papel {
 }
 
 model Subject {
-  id           Int        @id @default(autoincrement())
-  nome         String
-  ativa        Boolean    @default(true)
-  professor_id Int
-  createdAt    DateTime   @default(now()) @map("data_criacao")
-  updatedAt    DateTime   @updatedAt @map("data_atualizacao")
-  professor    User       @relation(fields: [professor_id], references: [id])
-  questions    Question[]
+  id          Int        @id @default(autoincrement())
+  nome        String
+  ativa       Boolean    @default(true)
+  professorId Int        @map("professor_id")
+  createdAt   DateTime   @default(now()) @map("data_criacao")
+  updatedAt   DateTime   @updatedAt @map("data_atualizacao")
+  professor   User       @relation(fields: [professorId], references: [id])
+  questions   Question[]
 }
 
 enum Dificuldade {
@@ -35,17 +35,17 @@ enum Dificuldade {
 }
 
 model Question {
-  id               Int         @id @default(autoincrement())
-  enunciado        String
-  dificuldade      Dificuldade
-  resposta_correta String?
-  subject_id       Int
-  author_id        Int
-  ativa            Boolean     @default(true)
-  createdAt        DateTime    @default(now()) @map("data_criacao")
-  updatedAt        DateTime    @updatedAt @map("data_atualizacao")
-  subject          Subject     @relation(fields: [subject_id], references: [id])
-  author           User        @relation(fields: [author_id], references: [id])
+  id              Int         @id @default(autoincrement())
+  enunciado       String
+  dificuldade     Dificuldade
+  respostaCorreta String?     @map("resposta_correta")
+  subjectId       Int         @map("subject_id")
+  authorId        Int         @map("author_id")
+  ativa           Boolean     @default(true)
+  createdAt       DateTime    @default(now()) @map("data_criacao")
+  updatedAt       DateTime    @updatedAt @map("data_atualizacao")
+  subject         Subject     @relation(fields: [subjectId], references: [id])
+  author          User        @relation(fields: [authorId], references: [id])
 }
 
 model User {

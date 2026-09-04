@@ -42,4 +42,7 @@ export default defineConfig([
     language: 'css/css',
     extends: ['css/recommended'],
   },
+  {
+    ignores: ['package-lock.json'],
+  },
 ]);

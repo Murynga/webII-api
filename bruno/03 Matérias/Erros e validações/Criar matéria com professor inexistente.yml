@@ -1,0 +1,29 @@
+info:
+  name: Criar matéria com professor inexistente
+  type: http
+  seq: 18
+  tags:
+    - atividade-04
+
+http:
+  method: POST
+  url: '{{baseUrl}}/subjects'
+  body:
+    type: json
+    data: |-
+      {
+        "nome": "Matéria inválida",
+        "professorId": 999999
+      }
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Informa professor não encontrado", function() {
+          expect(res.status).to.equal(404);
+          expect(res.body.success).to.equal(false);
+        });
+
+settings:
+  encodeUrl: true
