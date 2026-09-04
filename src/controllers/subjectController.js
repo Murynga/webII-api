@@ -65,7 +65,7 @@ export const getAll = async (req, res) => {
         id: true,
         nome: true,
         ativa: true,
-        professor_id: {
+        professor: {
           select: {
           id: true,
             nome: true,
@@ -116,7 +116,7 @@ export const getById = async (req, res) => {
         id: true,
         nome: true,
         ativa: true,
-        professor_id: {
+        professor: {
           select: {
           id: true,
             nome: true,
@@ -132,7 +132,7 @@ export const getById = async (req, res) => {
     if (!materia) {
       return res.status(404).json({
         success: false,
-        message: `Matéria com ID${subjectId} não encontrado`,
+        message: `Matéria com ID '${subjectId}' não encontrado`,
       });
     }
 

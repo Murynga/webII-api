@@ -2,6 +2,7 @@
 import express from "express";
 import prisma from "./config/database.js";
 import userRoutes from "./routes/userRoutes.js";
+import subjectRoutes from "./routes/subjectRoutes.js";
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.get("/health", async (req, res) => {
 
 // Rotas da API
 app.use("/users", userRoutes); // <--
+app.use("/subjects", subjectRoutes);
 
 // Middleware de tratamento de rotas não encontradas
 app.use((req, res) => {

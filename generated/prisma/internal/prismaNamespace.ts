@@ -684,7 +684,7 @@ export const SubjectScalarFieldEnum = {
   id: 'id',
   nome: 'nome',
   ativa: 'ativa',
-  professor_id: 'professor_id',
+  professorId: 'professorId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -696,9 +696,9 @@ export const QuestionScalarFieldEnum = {
   id: 'id',
   enunciado: 'enunciado',
   dificuldade: 'dificuldade',
-  resposta_correta: 'resposta_correta',
-  subject_id: 'subject_id',
-  author_id: 'author_id',
+  respostaCorreta: 'respostaCorreta',
+  subjectId: 'subjectId',
+  authorId: 'authorId',
   ativa: 'ativa',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
