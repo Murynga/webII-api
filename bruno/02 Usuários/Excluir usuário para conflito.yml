@@ -1,22 +1,21 @@
 info:
-  name: Buscar usuário por ID
+  name: Excluir usuário para conflito
   type: http
-  seq: 4
+  seq: 54
   tags:
-    - aula-04
+    - aula-05
 
 http:
-  method: GET
-  url: "{{baseUrl}}/users/{{userId}}"
+  method: DELETE
+  url: "{{baseUrl}}/users/{{conflictUserId}}"
 
 runtime:
   scripts:
     - type: tests
       code: |-
-        test("Retorna o usuário solicitado", function() {
+        test("Remove o usuário temporário usado no conflito", function() {
           expect(res.status).to.equal(200);
           expect(res.body.success).to.equal(true);
-          expect(res.body.data).to.have.property("id");
         });
 
 settings:

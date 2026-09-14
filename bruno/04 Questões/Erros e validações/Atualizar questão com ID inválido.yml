@@ -1,23 +1,25 @@
 info:
-  name: Criar questão inválida
+  name: Atualizar questão com ID inválido
   type: http
-  seq: 13
+  seq: 41
   tags:
-    - atividade-04
+    - atividade-05
 
 http:
-  method: POST
-  url: "{{baseUrl}}/questions"
+  method: PATCH
+  url: "{{baseUrl}}/questions/abc"
   body:
     type: json
     data: |-
-      {}
+      {
+        "dificuldade": 2
+      }
 
 runtime:
   scripts:
     - type: tests
       code: |-
-        test("Rejeita questão sem campos obrigatórios", function() {
+        test("Rejeita ID inválido ao atualizar questão", function() {
           expect(res.status).to.equal(400);
           expect(res.body.success).to.equal(false);
         });

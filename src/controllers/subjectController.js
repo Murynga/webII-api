@@ -1,10 +1,97 @@
-// src/controllers/subjectController.js
-import prisma from '../config/database.js';
+import * as subjectService from '../services/subjectService.js';
+
+const allowedPatchFields = ['nome', 'ativa', 'professorId'];
 
 /**
- * Controller de Matérias
- * Responsável por gerenciar as operações CRUD de matérias
+ * Converte um valor de rota em um ID inteiro positivo, sem aceitar valores parciais.
+ * @param {unknown} value - Valor recebido em `req.params.id`.
+ * @returns {number|null} ID válido ou `null` quando o valor é inválido.
  */
+function toPositiveInt(value) {
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0 ? number : null;
+}
+
+/**
+ * Verifica se o corpo de um PATCH contém pelo menos um campo que pode ser atualizado.
+ * @param {Object} body - Corpo recebido na requisição.
+ * @returns {boolean} `true` quando há ao menos um campo permitido.
+ */
+function hasAllowedPatchField(body) {
+  return allowedPatchFields.some(field => Object.hasOwn(body, field));
+}
+
+/**
+ * Identifica valores inválidos nos campos que o usuário pode enviar.
+ * @param {{ nome?: unknown, email?: unknown, papel?: unknown, foto?: unknown }} body - Dados a validar.
+ * @returns {boolean} `true` quando algum campo presente possui formato inválido.
+ */
+function hasInvalidSubjectFields({ nome, email, papel, foto }) {
+  return (
+    (nome !== undefined && (typeof nome !== 'string' || !nome.trim())) ||
+    (ativa !== undefined && (typeof ativa !== 'boolean' || !ativa.trim())) || // PODE SER SÓ BOOL
+    (professorId !== undefined && (typeof professorId !== 'number' || !professorId.trim()))
+  );
+}
+
+
+
+/**
+ * Valida a criação de uma matéria, delega a persistência ao service e monta a resposta HTTP.
+ * @param {Object} req - Requisição Express com os dados da matéria.
+ * @param {Object} res - Resposta Express usada para enviar o status e o JSON.
+ * @returns {Promise<Object>} Resposta HTTP de criação, validação ou erro.
+ */
+
+
+export const create = async (req, res) => {
+  try {
+    const { nome, ativa, professorId } = req.body;
+
+    if (
+      typeof nome !== 'string' ||
+      !nome.trim() ||
+      typeof ativa !== 'boolean' || // PODE PRECISAR TIRAR
+      !ativa.trim() ||
+      typeof professorId !== 'number' ||
+      !professorId.trim() ||
+      hasInvalidSubjectFields({ nome, ativa, professorId})
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Nome e id do professor são obrigatórios',
+      });
+    }
+
+    const result = await subjectService.createSubject({ nome, ativa, professorId });
+
+    /*
+    if (!result.ok && result.reason === 'EMAIL_CONFLICT') {
+      return res.status(409).json({
+        success: false,
+        message: 'Email já cadastrado no sistema',
+      });
+    }
+    */ // PODE PRECISAR SER REMOVIDO!!!!!!!!!!!!!!!
+
+    return res.status(201).json({
+      success: true,
+      message: 'Matéria criada com sucesso',
+      data: result.data,
+    });
+  } catch (error) {
+    console.error('Erro ao criar matéria:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erro ao criar matéria',
+    });
+  }
+};
+
+// NO DESESPERO, DEIXAR O QUE TÁ EM BAIXO E APAGAR O DE CIMA
+/*iutcfoutfvouygvbpiubpio
+
 
 // CREATE - Criar nova matéria
 export const create = async (req, res) => {
@@ -154,3 +241,5 @@ export const getById = async (req, res) => {
     });
   }
 };
+
+*/

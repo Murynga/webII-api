@@ -1,17 +1,19 @@
 info:
-  name: Rota inexistente
+  name: Excluir usuário inexistente
   type: http
-  seq: 25
+  seq: 33
+  tags:
+    - aula-05
 
 http:
-  method: GET
-  url: "{{baseUrl}}/rota-inexistente"
+  method: DELETE
+  url: "{{baseUrl}}/users/999999999"
 
 runtime:
   scripts:
     - type: tests
       code: |-
-        test("Retorna 404 para uma rota não cadastrada", function() {
+        test("Informa usuário não encontrado ao excluir", function() {
           expect(res.status).to.equal(404);
           expect(res.body.success).to.equal(false);
         });

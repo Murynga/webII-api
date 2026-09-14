@@ -1,26 +1,25 @@
 info:
-  name: Criar matéria com professor inexistente
+  name: Atualizar usuário inexistente
   type: http
-  seq: 18
+  seq: 31
   tags:
-    - atividade-04
+    - aula-05
 
 http:
-  method: POST
-  url: "{{baseUrl}}/subjects"
+  method: PATCH
+  url: "{{baseUrl}}/users/999999999"
   body:
     type: json
     data: |-
       {
-        "nome": "Matéria inválida",
-        "professorId": 999999
+        "nome": "Usuário ausente"
       }
 
 runtime:
   scripts:
     - type: tests
       code: |-
-        test("Informa professor não encontrado", function() {
+        test("Informa usuário não encontrado ao atualizar", function() {
           expect(res.status).to.equal(404);
           expect(res.body.success).to.equal(false);
         });
