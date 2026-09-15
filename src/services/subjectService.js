@@ -1,25 +1,25 @@
 import prisma from '../config/database.js';
 
-const publicServiceSelect = {
-id: true,
-nome: true,
-ativa: true,
-professorId: true,
-createdAt: true,
-updatedAt: true,
+const publicSubjectSelect = {
+  id: true,
+  nome: true,
+  ativa: true,
+  professorId: true,
+  createdAt: true,
+  updatedAt: true,
+  professor: {
+    select: {
+      id: true,
+      nome: true,
+      email: true,
+      foto: true,
+    },
+  },
 };
 
 /**
- * Normaliza um e-mail para que comparações e persistência usem o mesmo formato.
- * @param {number} id - ID do professor informado na requisição.
- * @returns {number} ID do professor sem espaços nas extremidades e em letras minúsculas.
- */
-const normalizeId = professorId => professorId * -1;
-
-
-/**
- * Busca todas as matérias no formato público, do mais recente para o mais antigo.
- * @returns {Promise<Object[]>} Lista de matérias sem campos internos.
+ * Busca todas as matérias no formato público, da mais recente para a mais antiga.
+ * @returns {Promise<Object[]>} Lista de matérias.
  */
 export const getAllSubjects = async () => {
   return prisma.subject.findMany({
@@ -41,46 +41,37 @@ export const getSubjectById = async subjectId => {
 };
 
 /**
- * Cria uma matéria depois de AAAAAAAAAAAAAAAAAnormalizar o e-mail e verificar a sua unicidade. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
- * @param {{ nome: string, ativa: boolean, professorId: number}} subjectData - Dados recebidos pelo controller.
- * @returns {Promise<{ ok: boolean, data?: Object, reason?: string }>} Resultado da criação ou o motivo do conflito.
+ * Cria uma matéria depois de verificar se o professor informado existe.
+ * @param {{ nome: string, ativa?: boolean, professorId: number }} subjectData - Dados recebidos pelo controller.
+ * @returns {Promise<{ ok: boolean, data?: Object, reason?: string }>} Resultado da criação ou o motivo da falha.
  */
 export const createSubject = async subjectData => {
-  const id = normalizeId(subjectData.professorId);
-  const idOwner = await prisma.subject.findUnique({
-    where: { professorId },
+  const professor = await prisma.user.findUnique({
+    where: { id: subjectData.professorId },
     select: { id: true },
   });
 
-  if (!idOwner) {
-    return { ok: false, reason: 'ID_NOT_FOUND' };
+  if (!professor) {
+    return { ok: false, reason: 'PROFESSOR_NOT_FOUND' };
   }
 
-  try {
-    const subject = await prisma.subject.create({
-      data: {
-        nome,
-        ativa: ativa || true, //Default: true
-        professorId,
-      },
-      select: publicSubjectSelect,
-    });
+  const materia = await prisma.subject.create({
+    data: {
+      nome: subjectData.nome.trim(),
+      ativa: subjectData.ativa ?? true,
+      professorId: subjectData.professorId,
+    },
+    select: publicSubjectSelect,
+  });
 
-    return { ok: true, data: subject };
-  } catch (error) {
-    if (error.code === 'P2002') {
-      return { ok: false, reason: 'ID_NOT_FOUND' }; // AAAAAAAAAAAAAAAAAAAAAAAPODE PRECISAR SER ALTERADO
-    }
-
-    throw error;
-  }
+  return { ok: true, data: materia };
 };
 
 /**
  * Atualiza somente os campos enviados para uma matéria existente.
  * @param {number} subjectId - ID da matéria a atualizar.
- * @param {{ nome?: string, ativa?: boolean}} subjectData - Campos permitidos no PATCH.
- * @returns {Promise<{ ok: boolean, data?: Object, reason?: string }>} Resultado da atualização ou inexistência.
+ * @param {{ nome?: string, ativa?: boolean, professorId?: number }} subjectData - Campos permitidos no PATCH.
+ * @returns {Promise<{ ok: boolean, data?: Object, reason?: string }>} Resultado da atualização ou o motivo da falha.
  */
 export const updateSubject = async (subjectId, subjectData) => {
   const materiaExistente = await prisma.subject.findUnique({
@@ -98,25 +89,30 @@ export const updateSubject = async (subjectId, subjectData) => {
     data.nome = subjectData.nome.trim();
   }
 
-  if (Object.hasOwn(subjectData, 'id')) {
-    data.id = subjectData.id.trim();
+  if (Object.hasOwn(subjectData, 'ativa')) {
+    data.ativa = subjectData.ativa;
   }
 
-  try {
-    const materia = await prisma.subject.update({
-      where: { id: subjectId },
-      data,
-      select: publicSubjectSelect,
+  if (Object.hasOwn(subjectData, 'professorId')) {
+    const professor = await prisma.user.findUnique({
+      where: { id: subjectData.professorId },
+      select: { id: true },
     });
 
-    return { ok: true, data: materia };
-  } catch (error) {
-    if (error.code === 'P2002') {
-      return { ok: false, reason: 'NOT_FOUND' };
+    if (!professor) {
+      return { ok: false, reason: 'PROFESSOR_NOT_FOUND' };
     }
 
-    throw error;
+    data.professorId = subjectData.professorId;
   }
+
+  const materia = await prisma.subject.update({
+    where: { id: subjectId },
+    data,
+    select: publicSubjectSelect,
+  });
+
+  return { ok: true, data: materia };
 };
 
 /**
@@ -139,10 +135,7 @@ export const deleteSubject = async subjectId => {
     return { ok: false, reason: 'NOT_FOUND' };
   }
 
-  if (
-    materiaExistente._count.subjects > 0 ||
-    materiaExistente._count.questions > 0
-  ) {
+  if (materiaExistente._count.questions > 0) {
     return { ok: false, reason: 'SUBJECT_IN_USE' };
   }
 

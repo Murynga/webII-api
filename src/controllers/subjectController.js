@@ -23,18 +23,16 @@ function hasAllowedPatchField(body) {
 
 /**
  * Identifica valores inválidos nos campos que o usuário pode enviar.
- * @param {{ nome?: unknown, email?: unknown, papel?: unknown, foto?: unknown }} body - Dados a validar.
+ * @param {{ nome?: unknown, ativa?: unknown, professorId?: unknown }} body - Dados a validar.
  * @returns {boolean} `true` quando algum campo presente possui formato inválido.
  */
-function hasInvalidSubjectFields({ nome, email, papel, foto }) {
+function hasInvalidSubjectFields({ nome, ativa, professorId }) {
   return (
     (nome !== undefined && (typeof nome !== 'string' || !nome.trim())) ||
-    (ativa !== undefined && (typeof ativa !== 'boolean' || !ativa.trim())) || // PODE SER SÓ BOOL
-    (professorId !== undefined && (typeof professorId !== 'number' || !professorId.trim()))
+    (ativa !== undefined && typeof ativa !== 'boolean') ||
+    (professorId !== undefined && !toPositiveInt(professorId))
   );
 }
-
-
 
 /**
  * Valida a criação de uma matéria, delega a persistência ao service e monta a resposta HTTP.
@@ -42,38 +40,35 @@ function hasInvalidSubjectFields({ nome, email, papel, foto }) {
  * @param {Object} res - Resposta Express usada para enviar o status e o JSON.
  * @returns {Promise<Object>} Resposta HTTP de criação, validação ou erro.
  */
-
-
 export const create = async (req, res) => {
   try {
     const { nome, ativa, professorId } = req.body;
+    const professorIdInt = toPositiveInt(professorId);
 
     if (
       typeof nome !== 'string' ||
       !nome.trim() ||
-      typeof ativa !== 'boolean' || // PODE PRECISAR TIRAR
-      !ativa.trim() ||
-      typeof professorId !== 'number' ||
-      !professorId.trim() ||
-      hasInvalidSubjectFields({ nome, ativa, professorId})
+      !professorIdInt ||
+      hasInvalidSubjectFields({ nome, ativa, professorId })
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          'Nome e id do professor são obrigatórios',
+        message: 'Nome e professorId (inteiro positivo) são obrigatórios; ativa deve ser booleana',
       });
     }
 
-    const result = await subjectService.createSubject({ nome, ativa, professorId });
+    const result = await subjectService.createSubject({
+      nome,
+      ativa,
+      professorId: professorIdInt,
+    });
 
-    /*
-    if (!result.ok && result.reason === 'EMAIL_CONFLICT') {
-      return res.status(409).json({
+    if (!result.ok && result.reason === 'PROFESSOR_NOT_FOUND') {
+      return res.status(404).json({
         success: false,
-        message: 'Email já cadastrado no sistema',
+        message: 'Professor informado não existe',
       });
     }
-    */ // PODE PRECISAR SER REMOVIDO!!!!!!!!!!!!!!!
 
     return res.status(201).json({
       success: true,
@@ -89,157 +84,171 @@ export const create = async (req, res) => {
   }
 };
 
-// NO DESESPERO, DEIXAR O QUE TÁ EM BAIXO E APAGAR O DE CIMA
-/*iutcfoutfvouygvbpiubpio
-
-
-// CREATE - Criar nova matéria
-export const create = async (req, res) => {
+/**
+ * Lista as matérias retornadas pelo service e informa o total encontrado.
+ * @param {Object} _req - Requisição Express, não utilizada nesta operação.
+ * @param {Object} res - Resposta Express usada para enviar a listagem.
+ * @returns {Promise<Object>} Resposta HTTP com a lista ou um erro interno.
+ */
+export const getAll = async (_req, res) => {
   try {
-    const { nome, ativa, professorId } = req.body;
+    const materias = await subjectService.getAllSubjects();
 
-    if (!nome || !professorId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Nome e Identificador do professor são obrigatórios',
-      });
-    }
-
-    // Cria a matéria no banco
-    const novaMateria = await prisma.subject.create({
-      data: {
-        nome,
-        ativa: ativa || true, //Default: true
-        professorId,
-      },
-      select: {
-        id: true,
-        nome: true,
-        ativa: true,
-        professor: {
-          select: {
-            id: true,
-            nome: true,
-            email: true,
-            foto: true,
-          },
-        },
-        createdAt: true,
-      },
-    });
-
-    res.status(201).json({
-      success: true,
-      message: 'Matéria criada com sucesso',
-      data: novaMateria,
-    });
-  } catch (error) {
-    console.error('Erro ao criar matéria:', error);
-
-    if (error.code === 'P2003') {
-      return res.status(404).json({
-        success: false,
-        message: 'ID do professor inexistente',
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: 'Erro ao criar matéria',
-    });
-  }
-};
-
-// READ - Listar todas as matérias
-export const getAll = async (req, res) => {
-  try {
-    const materias = await prisma.subject.findMany({
-      select: {
-        id: true,
-        nome: true,
-        ativa: true,
-        professor: {
-          select: {
-            id: true,
-            nome: true,
-            email: true,
-            foto: true,
-          },
-        },
-        createdAt: true,
-      },
-      orderBy: {
-        createdAt: 'desc', // Mais recentes primeiro
-      },
-    });
-
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: materias,
       total: materias.length,
     });
   } catch (error) {
     console.error('Erro ao listar matérias:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Erro ao listar matérias',
     });
   }
 };
 
-// READ - Buscar matéria por ID
+/**
+ * Valida o ID da rota e devolve uma matéria específica quando ela existe.
+ * @param {Object} req - Requisição Express que contém `params.id`.
+ * @param {Object} res - Resposta Express usada para enviar o resultado.
+ * @returns {Promise<Object>} Resposta HTTP com a matéria, erro de validação ou ausência.
+ */
 export const getById = async (req, res) => {
   try {
-    const { id } = req.params;
+    const subjectId = toPositiveInt(req.params.id);
 
-    // Converte string para número
-    const subjectId = Number(id);
-
-    // Validação básica
-    if (!Number.isInteger(subjectId) || subjectId <= 0) {
+    if (!subjectId) {
       return res.status(400).json({
         success: false,
-        message: 'ID inválido. Deve ser um número',
+        message: 'ID inválido. Deve ser um número inteiro positivo',
       });
     }
 
-    const materia = await prisma.subject.findUnique({
-      where: { id: subjectId },
-      select: {
-        id: true,
-        nome: true,
-        ativa: true,
-        professor: {
-          select: {
-            id: true,
-            nome: true,
-            email: true,
-            foto: true,
-          },
-        },
-        createdAt: true,
-      },
-    });
+    const materia = await subjectService.getSubjectById(subjectId);
 
-    // Matéria não encontrada
     if (!materia) {
       return res.status(404).json({
         success: false,
-        message: `Matéria com ID '${subjectId}' não encontrado`,
+        message: `Matéria com ID ${subjectId} não encontrada`,
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: materia,
     });
   } catch (error) {
     console.error('Erro ao buscar matéria:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Erro ao buscar matéria',
     });
   }
 };
 
-*/
+/**
+ * Valida um PATCH parcial e solicita ao service a atualização da matéria.
+ * @param {Object} req - Requisição Express com o ID e os campos a atualizar.
+ * @param {Object} res - Resposta Express usada para enviar o resultado.
+ * @returns {Promise<Object>} Resposta HTTP de atualização, validação ou ausência.
+ */
+export const update = async (req, res) => {
+  try {
+    const subjectId = toPositiveInt(req.params.id);
+
+    if (!subjectId) {
+      return res.status(400).json({
+        success: false,
+        message: 'ID inválido. Deve ser um número inteiro positivo',
+      });
+    }
+
+    if (!hasAllowedPatchField(req.body) || hasInvalidSubjectFields(req.body)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Envie ao menos um campo válido: nome, ativa ou professorId',
+      });
+    }
+
+    const patchData = { ...req.body };
+    if (Object.hasOwn(patchData, 'professorId')) {
+      patchData.professorId = toPositiveInt(patchData.professorId);
+    }
+
+    const result = await subjectService.updateSubject(subjectId, patchData);
+
+    if (!result.ok && result.reason === 'NOT_FOUND') {
+      return res.status(404).json({
+        success: false,
+        message: `Matéria com ID ${subjectId} não encontrada`,
+      });
+    }
+
+    if (!result.ok && result.reason === 'PROFESSOR_NOT_FOUND') {
+      return res.status(404).json({
+        success: false,
+        message: 'Professor informado não existe',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Matéria atualizada com sucesso',
+      data: result.data,
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar matéria:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erro ao atualizar matéria',
+    });
+  }
+};
+
+/**
+ * Remove uma matéria quando o ID é válido e não existem questões vinculadas.
+ * @param {Object} req - Requisição Express que contém `params.id`.
+ * @param {Object} res - Resposta Express usada para enviar o resultado.
+ * @returns {Promise<Object>} Resposta HTTP de remoção, conflito, validação ou ausência.
+ */
+export const remove = async (req, res) => {
+  try {
+    const subjectId = toPositiveInt(req.params.id);
+
+    if (!subjectId) {
+      return res.status(400).json({
+        success: false,
+        message: 'ID inválido. Deve ser um número inteiro positivo',
+      });
+    }
+
+    const result = await subjectService.deleteSubject(subjectId);
+
+    if (!result.ok && result.reason === 'NOT_FOUND') {
+      return res.status(404).json({
+        success: false,
+        message: `Matéria com ID ${subjectId} não encontrada`,
+      });
+    }
+
+    if (!result.ok && result.reason === 'SUBJECT_IN_USE') {
+      return res.status(409).json({
+        success: false,
+        message: 'Matéria possui questões vinculadas',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Matéria removida com sucesso',
+      data: result.data,
+    });
+  } catch (error) {
+    console.error('Erro ao remover matéria:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erro ao remover matéria',
+    });
+  }
+};

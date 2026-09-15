@@ -18,4 +18,10 @@ router.get('/', questionController.getAll);
 // READ - Buscar questão por ID
 router.get('/:id', questionController.getById);
 
+// PATCH - Alterar partes da questão, selecionada por ID
+router.patch('/:id', questionController.update);
+
+// DELETE - Deletar questão, por ID
+router.delete('/:id', questionController.remove);
+
 export default router;
