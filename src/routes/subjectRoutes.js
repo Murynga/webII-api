@@ -18,4 +18,10 @@ router.get('/', subjectController.getAll);
 // READ - Buscar usuário por ID
 router.get('/:id', subjectController.getById);
 
+// PATCH - Alterar partes da matéria, selecionada por ID
+router.patch('/:id', subjectController.update);
+
+// DELETE - Deletar matéria, por ID
+router.delete('/:id', subjectController.remove);
+
 export default router;

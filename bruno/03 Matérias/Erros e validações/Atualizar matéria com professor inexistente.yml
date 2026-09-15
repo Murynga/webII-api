@@ -1,0 +1,80 @@
+info:
+  name: Atualizar matéria com professor inexistente
+  type: http
+  seq: 38
+  tags:
+    - atividade-05
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/subjects/{{missingProfessorSubjectId}}"
+  body:
+    type: json
+    data: |-
+      {
+        "professorId": 999999999
+      }
+
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        const userResponse = await bru.sendRequest({
+          method: "POST",
+          url: `${bru.getEnvVar("baseUrl")}/users`,
+          headers: { "Content-Type": "application/json" },
+          data: {
+            nome: "Professor para validação de atualização",
+            email: `professor-atualizacao-${suffix}@exemplo.com`,
+            papel: "PROFESSOR"
+          }
+        });
+
+        if (userResponse.status !== 201) {
+          throw new Error("Não foi possível criar o professor da matéria de teste");
+        }
+
+        const subjectResponse = await bru.sendRequest({
+          method: "POST",
+          url: `${bru.getEnvVar("baseUrl")}/subjects`,
+          headers: { "Content-Type": "application/json" },
+          data: {
+            nome: "Matéria para professor inexistente",
+            professorId: userResponse.data.data.id
+          }
+        });
+
+        if (subjectResponse.status !== 201) {
+          throw new Error("Não foi possível criar a matéria de teste");
+        }
+
+        bru.setVar("missingProfessorSubjectId", String(subjectResponse.data.data.id));
+        bru.setVar("missingProfessorUserId", String(userResponse.data.data.id));
+    - type: after-response
+      code: |-
+        const subjectId = bru.getVar("missingProfessorSubjectId");
+        const userId = bru.getVar("missingProfessorUserId");
+
+        if (subjectId) {
+          await bru.sendRequest({
+            method: "DELETE",
+            url: `${bru.getEnvVar("baseUrl")}/subjects/${subjectId}`
+          });
+        }
+
+        if (userId) {
+          await bru.sendRequest({
+            method: "DELETE",
+            url: `${bru.getEnvVar("baseUrl")}/users/${userId}`
+          });
+        }
+    - type: tests
+      code: |-
+        test("Exige professor existente ao atualizar matéria", function() {
+          expect(res.status).to.equal(404);
+          expect(res.body.success).to.equal(false);
+        });
+
+settings:
+  encodeUrl: true

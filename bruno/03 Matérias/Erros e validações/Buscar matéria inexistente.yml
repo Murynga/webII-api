@@ -7,7 +7,7 @@ info:
 
 http:
   method: GET
-  url: '{{baseUrl}}/subjects/999999'
+  url: "{{baseUrl}}/subjects/999999"
 
 runtime:
   scripts:

@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon --watch src --watch generated/prisma --ext js,ts,json --exec tsx src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -36,6 +38,7 @@
     "@eslint/markdown": "^8.0.3",
     "@prisma/client": "^7.10.0",
     "@types/node": "^26.4.0",
+    "@vitest/coverage-v8": "^5.0.0",
     "dotenv": "^17.4.2",
     "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
@@ -44,6 +47,8 @@
     "nodemon": "^3.1.14",
     "prettier": "^3.9.6",
     "prisma": "^7.10.0",
-    "tsx": "^4.23.13"
+    "supertest": "^7.2.2",
+    "tsx": "^4.23.13",
+    "vitest": "^5.0.0"
   }
 }
